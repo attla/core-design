@@ -1,0 +1,43 @@
+{
+    "name": "attla/core-design",
+    "description": "Enhances laravel to the domain driven design (DDD) pattern oriented structure.",
+    "keywords": [
+        "attla",
+        "laravel",
+        "ddd",
+        "domain-driven-design",
+        "structure",
+        "ddd-pattern"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nicolau",
+            "email": "nicolau@zunq.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2.5",
+        "attla/dynamodb": "dev-main",
+        "attla/support": "dev-main",
+        "illuminate/container": "^10.0|^11.0",
+        "illuminate/contracts": "^10.0|^11.0",
+        "illuminate/database": "^10.0|^11.0",
+        "illuminate/http": "^10.0|^11.0",
+        "illuminate/support": "^10.0|^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Core\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Core\\ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
