@@ -4,8 +4,7 @@ namespace Core\Traits;
 
 use Core\Response;
 use Core\Database\Model;
-use Core\Helpers\Invoke;
-use Illuminate\Container\Container;
+use Attla\Support\Invoke;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -28,11 +27,9 @@ trait HasFactory
         // Injectable
         protected ?Request $request = null,
         protected ?Authenticatable $auth = null,
-        protected ?Container $app = null,
         // Extendable
         string|null $model = null,
     ) {
-        $this->app ??= app();
         $this->resolveNamespaces();
         $this->entity($model);
     }
@@ -51,17 +48,6 @@ trait HasFactory
             'model' => $this->model,
             'data' => $this->data(),
         ];
-    }
-
-    protected function new(string $class, array $params = []) {
-        return $this->app->make($class, $params ?: $this->binds());
-    }
-    protected function call(object|string $instance, string $method, array $params = []) {
-        if (is_string($instance)) {
-            $instance = $this->new($instance);
-        }
-
-        return $this->app->call([$instance, $method], $params);
     }
 
     /**
@@ -91,8 +77,8 @@ trait HasFactory
     protected function entity(string|Model|null $model = null) {
         !$model && isset($this->model) && ($model = $this->model);
 
-        if ($model && (class_exists($model) || $this->app->isAlias($model))) {
-            $this->entity = $this->new($model);
+        if ($model && (class_exists($model) || Invoke::isAlias($model))) {
+            $this->entity = Invoke::new($model);
             $this->model = $model instanceof Model ? get_class($model) : $model;
         }
     }
