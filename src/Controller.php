@@ -2,11 +2,40 @@
 
 namespace Core;
 
-use Core\Traits\HasFactory;
+use Attla\Support\Invoke;
+use Core\Traits\HasContext;
 
 abstract class Controller extends \Illuminate\Routing\Controller
 {
-    use HasFactory;
+    use HasContext;
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return self
+     * */
+    public function __construct(
+        // Injectable
+        // protected ?Request $request = null,
+        // protected ?Authenticatable $auth = null
+    ) {
+        $this->context();
+
+        // $this->middleware(fn ($request, $next) => $this->setup($request, $next));
+    }
+
+    protected function handleAction(string $action, array $params): Response
+    {
+        if (!method_exists($action = $this->action($action), $handle = 'handle')) {
+            return Response::internalError()->message(sprintf(
+                    'Method %s::%s does not exist.',
+                    $action,
+                    $handle
+                ));
+        }
+
+        return Invoke::call($action, $handle, $params);
+    }
 
     /** @inheritdoc */
     public function callAction($method, $params)
@@ -17,20 +46,14 @@ abstract class Controller extends \Illuminate\Routing\Controller
     /** @inheritdoc */
     public function __call($method, $params)
     {
-        return $this->callAction($method, $params);
+        return $this->handleAction($method, $params);
     }
 
     /** @inheritdoc */
     public static function __callStatic($method, $params)
     {
-        return app(static::class)->callAction($method, $params);
+        return Invoke::make(static::class)->handleAction($method, $params);
     }
-
-    /** @return self */
-    // public function __construct()
-    // {
-    //     $this->middleware(fn ($request, $next) => $this->setup($request, $next));
-    // }
 
     /**
      * @param \Illuminate\Http\Request $request
