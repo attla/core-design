@@ -7,12 +7,13 @@ use Core\Traits\HasContext;
 use Attla\Support\Invoke;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\UnauthorizedException;
 
 abstract class Action
 {
     use HasContext;
 
-    // TODO: request validations
+    protected $rules = [];
     // TODO: request middlewares
     // TODO: request transforms
 
@@ -26,12 +27,30 @@ abstract class Action
     public function __construct(
         // Injectable
         protected ?Request $request = null,
-        protected ?Authenticatable $auth = null,
-        // Extendable
-        string|null $model = null,
+        protected ?Authenticatable $auth = null
     ) {
         $this->context();
-        $this->entity($model);
+        $this->entity();
+        $this->validate();
+    }
+
+    /**
+     * Validate the action.
+     *
+     * @return void
+     *
+     * @throws \Illuminate\Validation\UnauthorizedException
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function validate()
+    {
+        if (!$this->passesAuthorization()) {
+            throw new UnauthorizedException;
+        }
+
+        if (!empty($this->rules)) {
+            $this->request->validate($this->rules);
+        }
     }
 
     /**
@@ -64,5 +83,19 @@ abstract class Action
             $this->entity = Invoke::new($model);
             $this->model = $model instanceof Model ? get_class($model) : $model;
         }
+    }
+
+    /**
+     * Determine if the request passes the authorization check.
+     *
+     * @return bool
+     */
+    protected function passesAuthorization()
+    {
+        if (method_exists($this, 'authorize')) {
+            return $this->authorize();
+        }
+
+        return true;
     }
 }
