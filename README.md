@@ -6,8 +6,6 @@
 <a href="https://packagist.org/packages/attla/core-design"><img src="https://img.shields.io/packagist/dt/attla/core-design" alt="Total Downloads"></a>
 </p>
 
-🧩 Enhances laravel to the DDD pattern oriented structure.
-
 ## Installation
 
 ```bash

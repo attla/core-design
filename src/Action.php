@@ -76,6 +76,12 @@ abstract class Action
         return array_merge($this->request->route()->parameters(), $this->request->all());
     }
 
+    /**
+     * Build the entity action
+     *
+     * @param null|string|Model $model = []
+     * @return void
+     */
     protected function entity(string|Model|null $model = null) {
         !$model && isset($this->model) && ($model = $this->model);
 
