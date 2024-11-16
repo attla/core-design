@@ -14,6 +14,7 @@ use Illuminate\Foundation\Configuration\{
 };
 use Illuminate\Validation\UnauthorizedException;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\HttpKernel\Exception\{
     AccessDeniedHttpException,
     BadRequestHttpException,
@@ -98,7 +99,8 @@ class ServiceProvider extends BaseServiceProvider
                     MethodNotAllowedHttpException::class,
                     NotAcceptableHttpException::class,
                     ConflictHttpException::class,
-                    ControllerDoesNotReturnResponseException::class
+                    ControllerDoesNotReturnResponseException::class,
+                    RouteNotFoundException::class
                         => Response::notFound(),
 
                     UnauthorizedHttpException::class,
