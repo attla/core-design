@@ -5,6 +5,7 @@ namespace Core;
 use Attla\Support\Traits\{ HasArrayOffsets, HasMagicAttributes };
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class Response extends JsonResource
@@ -110,6 +111,23 @@ class Response extends JsonResource
     public function errorCode($code = null)
     {
         $this->errorCode = $code;
+        return $this;
+    }
+
+    /**
+     * Add error
+     *
+     * @param  array  $error
+     * @return self
+     */
+    public function addError($error, $key = null)
+    {
+        $key ??= 'general';
+        if (!empty($error)) {
+            isset($this->errors[$key])
+                ? $this->errors[$key][] = $error
+                : $this->errors[$key] = Arr::wrap($error);
+        }
 
         return $this;
     }
@@ -120,23 +138,9 @@ class Response extends JsonResource
      * @param  array  $error
      * @return self
      */
-    public function addError(array $error = [])
+    public function error($error, $key = null)
     {
-        if (!empty($error))
-            $this->errors[] = $error;
-
-        return $this;
-    }
-
-    /**
-     * Add error
-     *
-     * @param  array  $error
-     * @return self
-     */
-    public function error(array $error = [])
-    {
-        return $this->addError($error);
+        return $this->addError($error, $key);
     }
 
     /**
@@ -148,7 +152,6 @@ class Response extends JsonResource
     public function errors(array $errors)
     {
         $this->errors = $errors;
-
         return $this;
     }
 
@@ -176,7 +179,6 @@ class Response extends JsonResource
     public function data($data)
     {
         $this->data = $data;
-
         return $this;
     }
 
@@ -190,7 +192,6 @@ class Response extends JsonResource
     public function header($key, $values)
     {
         $this->headers[$key] = $values;
-
         return $this;
     }
 
@@ -203,7 +204,6 @@ class Response extends JsonResource
     public function headers(array $headers)
     {
         $this->headers = $headers;
-
         return $this;
     }
 
@@ -258,10 +258,22 @@ class Response extends JsonResource
         return !empty($response) ? $response : $this->data;
     }
 
+    /**
+     * Create a response from status code
+     *
+     * @param  int  $code
+     * @param  mixed  $data
+     * @return static
+     */
     public static function fromStatusCode($code = 200, $data = null) {
         return new static($code, $data);
     }
 
+    /**
+     * Set request time
+     *
+     * @return $this
+     */
     public function time() {
         if (defined('LARAVEL_START')) {
             $this->requestTime = round((microtime(true) - LARAVEL_START) * 1000) . ' ms';
@@ -270,6 +282,11 @@ class Response extends JsonResource
         return $this;
     }
 
+    /**
+     * Set response to return only the resource data
+     *
+     * @return $this
+     */
     public function dataOnly() {
         $this->dataOnly = true;
         return $this;
@@ -285,6 +302,10 @@ class Response extends JsonResource
 
     public static function created($data = null) {
         return new static(201, $data);
+    }
+
+    public static function accepted($data = null) {
+        return new static(202, $data);
     }
 
     public static function deleted($data = null) {
@@ -305,6 +326,10 @@ class Response extends JsonResource
 
     public static function notFound($data = null) {
         return new static(404, $data);
+    }
+
+    public static function conflict($data = null) {
+        return new static(409, $data);
     }
 
     public static function unsupportedMediaType($data = null) {
