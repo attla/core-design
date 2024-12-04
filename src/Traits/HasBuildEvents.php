@@ -6,6 +6,7 @@ trait HasBuildEvents
 {
     /** @return self */
     public function __construct(array $attributes = []) {
+        $this->bootIfNotBooted();
         $this->fireModelEvent('building');
         parent::__construct($attributes);
         $this->fireModelEvent('builded');
