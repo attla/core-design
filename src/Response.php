@@ -89,7 +89,7 @@ class Response extends JsonResource
     /**
      * Set the message
      *
-     * @param  int  $code
+     * @param int $code
      * @return self
      */
     public function code($code)
@@ -105,7 +105,7 @@ class Response extends JsonResource
     /**
      * Set the error code
      *
-     * @param  int  $code
+     * @param int $code
      * @return self
      */
     public function errorCode($code = null)
@@ -117,7 +117,7 @@ class Response extends JsonResource
     /**
      * Add error
      *
-     * @param  array  $error
+     * @param array $error
      * @return self
      */
     public function addError($error, $key = null)
@@ -135,7 +135,7 @@ class Response extends JsonResource
     /**
      * Add error
      *
-     * @param  array  $error
+     * @param array $error
      * @return self
      */
     public function error($error, $key = null)
@@ -146,7 +146,7 @@ class Response extends JsonResource
     /**
      * Replace error bag
      *
-     * @param  array  $error
+     * @param array $error
      * @return self
      */
     public function errors(array $errors)
@@ -158,8 +158,8 @@ class Response extends JsonResource
     /**
      * Set the message
      *
-     * @param  string  $message
-     * @param  array  $replace
+     * @param string $message
+     * @param array $replace
      * @return self
      */
     public function message($message = null, $replace = [])
@@ -173,7 +173,7 @@ class Response extends JsonResource
     /**
      * Set response data
      *
-     * @param  mixed  $data
+     * @param mixed $data
      * @return self
      */
     public function data($data)
@@ -185,8 +185,8 @@ class Response extends JsonResource
     /**
      * Set a header on the Response.
      *
-     * @param  string  $key
-     * @param  array|string  $values
+     * @param string $key
+     * @param array|string $values
      * @return self
      */
     public function header($key, $values)
@@ -198,7 +198,7 @@ class Response extends JsonResource
     /**
      * Add header to response
      *
-     * @param  array  $headers
+     * @param array $headers
      * @return self
      */
     public function headers(array $headers)
@@ -210,8 +210,8 @@ class Response extends JsonResource
     /**
      * Customize the outgoing response for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Illuminate\Http\Response  $response
+     * @param \Illuminate\Http\Request $request
+     * @param \Illuminate\Http\Response $response
      * @return void
      */
     public function withResponse($request, $response)
@@ -230,7 +230,7 @@ class Response extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
     public function toArray(Request $request)
@@ -261,8 +261,8 @@ class Response extends JsonResource
     /**
      * Create a response from status code
      *
-     * @param  int  $code
-     * @param  mixed  $data
+     * @param int $code
+     * @param mixed $data
      * @return static
      */
     public static function fromStatusCode($code = 200, $data = null) {
