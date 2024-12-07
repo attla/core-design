@@ -2,6 +2,7 @@
 
 namespace Core;
 
+use Attla\Support\Arr as AttlaArr;
 use Attla\Support\Traits\{ HasArrayOffsets, HasMagicAttributes };
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -56,28 +57,33 @@ class Response extends JsonResource
     public $data;
 
     /**
-     * The resource instance.
+     * The resource instance
      *
      * @var mixed
      */
     public $resource = [];
 
     /**
-     * The "data" wrapper that should be applied.
+     * The "data" wrapper that should be applied
      *
      * @var string|null
      */
     public static $wrap = null;
 
     /**
-     * Indicate if the response is data only.
+     * Indicate if the response is data only
      *
      * @var bool
      */
     public $dataOnly = false;
+
+    /**
+     * Store the request time
+     *
+     * @var bool
+     */
     public $requestTime = 0;
 
-    /** JsonResource constructor override */
     private function __construct(
         $code = null,
         $data = []
@@ -178,6 +184,10 @@ class Response extends JsonResource
      */
     public function data($data)
     {
+        if (is_object($data)) {
+            $data = AttlaArr::toArray($data);
+        }
+
         $this->data = $data;
         return $this;
     }
@@ -228,7 +238,7 @@ class Response extends JsonResource
     }
 
     /**
-     * Transform the resource into an array.
+     * Transform the resource into an array
      *
      * @param \Illuminate\Http\Request $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
@@ -253,20 +263,82 @@ class Response extends JsonResource
 
         $response = array_merge(
             $response,
-            is_array($resource = $this->resource ?? []) ? $resource : $resource->toArray()
+            AttlaArr::toArray($this->resource ?? []),
         );
-        return !empty($response) ? $response : $this->data;
+
+        return $this->resumeResponse($response);
     }
 
     /**
-     * Create a response from status code
+     * Resume response value
      *
-     * @param int $code
-     * @param mixed $data
-     * @return static
+     * @param array $response
+     * @return array
      */
-    public static function fromStatusCode($code = 200, $data = null) {
-        return new static($code, $data);
+    public function resumeResponse($response)
+    {
+        if (Arr::has($response, 'data.data')) {
+            $response = $this->wrapPagination($response);
+        }
+
+        return $this->wrapData($response);
+    }
+
+    /**
+     * Dynamic resume a array by aliases
+     *
+     * @param array $array
+     * @param string $key
+     * @param string|null $prefix
+     * @param array $aliases
+     * @return array
+     */
+    public function wrapIt($array, $key, $prefix = null, ...$aliases)
+    {
+        $value = null;
+        $aliases = Arr::flatten($aliases);
+        array_unshift($aliases, $key);
+
+        if (!empty($prefix)) {
+            $aliases = Arr::map($aliases, fn($alias) => $prefix.$alias);
+        }
+
+        foreach ($aliases as $alias) {
+            if (!empty($val = Arr::get($array, $alias))) {
+                $value = $val;
+            }
+        }
+
+        if (!empty($value) || !isset($array[$key])) {
+            $array[$key] = $value;
+        }
+
+        return $array;
+    }
+
+    /**
+     * Resume response data
+     *
+     * @param array $response
+     * @return array
+     */
+    public function wrapData($response)
+    {
+        return $this->wrapIt($response, 'data', 'data.', 'result', 'response');
+    }
+
+    /**
+     * Resume pagination data
+     *
+     * @param array $response
+     * @return array
+     */
+    public function wrapPagination($response)
+    {
+        $prefix = 'data.';
+        $response = $this->wrapIt($response, 'next_page', $prefix, 'next_page_url');
+        // $response = $this->wrapIt($response, 'prev_page', $prefix, 'next_page_url');
+        return $this->wrapIt($response, 'page_size', $prefix, 'size', 'per_page', 'pageSize');
     }
 
     /**
@@ -290,6 +362,17 @@ class Response extends JsonResource
     public function dataOnly() {
         $this->dataOnly = true;
         return $this;
+    }
+
+    /**
+     * Create a response from status code
+     *
+     * @param int $code
+     * @param mixed $data
+     * @return static
+     */
+    public static function fromStatusCode($code = 200, $data = null) {
+        return new static($code, $data);
     }
 
     public static function body($data = null) {
