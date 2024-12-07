@@ -193,7 +193,7 @@ class Response extends JsonResource
     }
 
     /**
-     * Set a header on the Response.
+     * Set a header on the Response
      *
      * @param string $key
      * @param array|string $values
@@ -218,7 +218,7 @@ class Response extends JsonResource
     }
 
     /**
-     * Customize the outgoing response for the resource.
+     * Customize the outgoing response for the resource
      *
      * @param \Illuminate\Http\Request $request
      * @param \Illuminate\Http\Response $response
