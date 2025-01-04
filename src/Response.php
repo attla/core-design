@@ -7,7 +7,9 @@ use Attla\Support\Traits\{ HasArrayOffsets, HasMagicAttributes };
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Arr;
+use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class Response extends JsonResource
 {
@@ -45,9 +47,9 @@ class Response extends JsonResource
     /**
      * Response headers
      *
-     * @var array<string, string|string[]>
+     * @var ResponseHeaderBag
      */
-    public array $headers = [];
+    public ResponseHeaderBag $headers;
 
     /**
      * Response data
@@ -85,11 +87,13 @@ class Response extends JsonResource
     public $requestTime = 0;
 
     private function __construct(
+        $data = [],
         $code = null,
-        $data = []
+        $headers = []
     ) {
-        $this->code($code)
-            ->data($data);
+        $this->headers = new ResponseHeaderBag($headers);
+
+        $this->data($data)->code($code);
     }
 
     /**
@@ -197,23 +201,76 @@ class Response extends JsonResource
      *
      * @param string $key
      * @param array|string $values
-     * @return self
+     * @param bool $replace
+     * @return $this
      */
-    public function header($key, $values)
+    public function header($key, $values, $replace = true)
     {
-        $this->headers[$key] = $values;
+        $this->headers->set($key, $values, $replace);
         return $this;
     }
 
     /**
-     * Add header to response
+     * Add an array of headers to the response
      *
-     * @param array $headers
-     * @return self
+     * @param \Symfony\Component\HttpFoundation\HeaderBag|array $headers
+     * @return $this
      */
-    public function headers(array $headers)
+    public function withHeaders($headers)
     {
-        $this->headers = $headers;
+        if ($headers instanceof HeaderBag) {
+            $headers = $headers->all();
+        }
+
+        foreach ($headers as $key => $value) {
+            $this->headers->set($key, $value);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add a cookie to the response
+     *
+     * @param \Symfony\Component\HttpFoundation\Cookie|mixed $cookie
+     * @return $this
+     */
+    public function cookie($cookie)
+    {
+        return $this->withCookie(...func_get_args());
+    }
+
+    /**
+     * Add a cookie to the response
+     *
+     * @param \Symfony\Component\HttpFoundation\Cookie|mixed $cookie
+     * @return $this
+     */
+    public function withCookie($cookie)
+    {
+        if (is_string($cookie) && function_exists('cookie')) {
+            $cookie = cookie(...func_get_args());
+        }
+
+        $this->headers->setCookie($cookie);
+        return $this;
+    }
+
+    /**
+     * Expire a cookie when sending the response
+     *
+     * @param \Symfony\Component\HttpFoundation\Cookie|mixed $cookie
+     * @param string|null $path
+     * @param string|null $domain
+     * @return $this
+     */
+    public function withoutCookie($cookie, $path = null, $domain = null)
+    {
+        if (is_string($cookie) && function_exists('cookie')) {
+            $cookie = cookie($cookie, null, -2628000, $path, $domain);
+        }
+
+        $this->headers->setCookie($cookie);
         return $this;
     }
 
@@ -231,9 +288,8 @@ class Response extends JsonResource
             !empty($this->message) && empty(HttpResponse::$statusTexts[$this->code]) ? $this->message : null
         );
 
-        if (!empty($this->headers)) {
-            foreach ($this->headers as $key => $values)
-                $response->header($key, $values);
+        if (!empty($headers = $this->headers->all())) {
+            $response->withHeaders($headers);
         }
     }
 
@@ -372,7 +428,7 @@ class Response extends JsonResource
      * @return static
      */
     public static function fromStatusCode($code = 200, $data = null) {
-        return new static($code, $data);
+        return new static($data, $code);
     }
 
     public static function body($data = null) {
@@ -380,51 +436,51 @@ class Response extends JsonResource
     }
 
     public static function ok($data = null) {
-        return new static(200, $data);
+        return new static($data, 200);
     }
 
     public static function created($data = null) {
-        return new static(201, $data);
+        return new static($data, 201);
     }
 
     public static function accepted($data = null) {
-        return new static(202, $data);
+        return new static($data, 202);
     }
 
     public static function deleted($data = null) {
-        return new static(204, $data);
+        return new static($data, 204);
     }
 
     public static function badRequest($data = null) {
-        return new static(400, $data);
+        return new static($data, 400);
     }
 
     public static function unauthorized($data = null) {
-        return new static(401, $data);
+        return new static($data, 401);
     }
 
     public static function forbidden($data = null) {
-        return new static(403, $data);
+        return new static($data, 403);
     }
 
     public static function notFound($data = null) {
-        return new static(404, $data);
+        return new static($data, 404);
     }
 
     public static function conflict($data = null) {
-        return new static(409, $data);
+        return new static($data, 409);
     }
 
     public static function unsupportedMediaType($data = null) {
-        return new static(415, $data);
+        return new static($data, 415);
     }
 
     public static function unprocessableEntity($data = null) {
-        return new static(422, $data);
+        return new static($data, 422);
     }
 
     public static function internalError($data = null) {
-        return new static(500, $data);
+        return new static($data, 500);
     }
 
     /**
