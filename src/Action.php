@@ -15,6 +15,7 @@ abstract class Action
 
     protected $rules = [];
     // TODO: request middlewares
+        // https://stackoverflow.com/questions/78265691/laravel-11-middleware-authentication-with-controllers-method
     // TODO: request transforms
 
     /** @var array */
